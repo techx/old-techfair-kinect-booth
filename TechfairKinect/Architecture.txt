@@ -1,0 +1,76 @@
+﻿Three main parts of this app:
+
+	Architecture
+	StringDisplay
+	Menu
+
+In the Architecture:
+	App - main app class
+		contains app loop, maintains current AppState, invokes rendering
+	IAppState - either StringDisplayAppState or MenuAppState
+		told to update physics, update joint, or that gesture has been performed
+		can request state change
+		also has methods for transitioning to and from
+		enum used for identifying types via dictionary lookups and to unify renderers to states
+	IAppStateRenderer - either StringDisplayRenderer or MenuRenderer
+		told to render a certain interpolation
+		contains respective AppState and GraphicsBase
+	IGraphicsBase<TSurface> - either GDI+ or DirectX (GDI has TSurface=PaintEventArgs, DirectX has some DXCanvas)
+		contains ScreenBounds, OnExit event (in case the window is given the Exit message)
+		told to Render(Action<TSurface>) -> e.g. GDI+ will invalidate the region, which causes OnPaint() to be called
+			which invokes Action(PaintEventArgs)
+	ISkeletonRenderer - GDI+/DirectX; renders current skeleton in the bottom of the screen so user can see how self is perceived
+		contains GraphicsBase
+		can be told to update joint
+	IGestureRecognizer - Keyboard (testing) or Kinect
+		contains current AppState (so that it can tell the app state to move joints or that a gesture has been performed)
+		contains SkeletonRenderer (to say that joints have been moved)
+
+
+In the StringDisplay:
+	basic idea is that a region of particles is locked onto two adjacent joints (particles are referenced by their original x-coordinate)
+		if given time to settle, particles will interpolate a position between those two joints based on its original x-coordinate
+		we use friction and a restoring force to make the particles come to (and perhaps oscillate around at first) that interpolated position
+		we also cache the original location so that when the particles become unlocked (e.g. the arm drops below the threshold height), 
+		the same restoring force and friction will bring the particle back to approximately its original location
+
+	Particle
+		particle physics (restoring force, friction, position, velocity)
+	IParticleController - Circular/Spherical
+		can be told to update physics, move a joint (and thus move particles), explode particles in/out
+	ParticleStringGenerator - generates the original particles based on the config string 
+		creates a bitmap, writes the largest possible string to the bitmap, then greedily places particles where a certain threshold
+			of colored pixels are 
+	StringDisplayRenderer - GDI+/DirectX
+		implements IAppStateRenderer; just needs GraphicsBase and ParticleRenderer to be implemented by subclass
+	IParticleRenderer - GDI+/DirectX
+		can be told to render a set of particles to a graphics base
+		
+
+In the Menu:
+	idea similar to xbox360 Kinect menus--use left or right hand as cursor; hover over item for a certain period of time to select
+	can exit app, go back to particles, view information about various techfair things
+
+	(more details later)
+
+
+Milestones:
+
+	1. ACHIEVED: Generate/Render particles
+	2. Allow particle movement via keyboard
+		-CircularParticleController
+		-KeyboardGestureRecognizer
+	3. Render Skeleton 
+		-ISkeletonRenderer (GDI implementation)
+		-Add to GestureRecognizer
+	4. Allow particle movement via Kinect
+		-KinectGestureRecognizer
+	5. Recognize exploding arms (go to menu)
+	6. Display Menu/Allow navigation
+		-MenuAppState, MenuRenderer (GDI implementation)
+		-Other menu implementation details
+
+Reach Milestones:
+
+	7. Improve graphics (make them fancier)
+		-DirectX, particle spheres?
