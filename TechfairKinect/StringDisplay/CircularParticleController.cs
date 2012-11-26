@@ -10,8 +10,6 @@ namespace TechfairKinect.StringDisplay
 {
     internal class CircularParticleController : IParticleController
     {
-        private const string ParticleStringSettingsKey = "ParticleString";
-        private const string ParticleRadiusSettingsKey = "ParticleRadius";
 
         private static JointType[] UsableJoints = new[]
         {
@@ -22,8 +20,8 @@ namespace TechfairKinect.StringDisplay
 
         private Dictionary<JointType, Tuple<int, int>> _jointParticleIntervals; //particles are referenced by their x-coordinate
 
-        private readonly ParticleStringGenerator _particleStringGenerator;
         private List<Particle> _particles;
+        private readonly ParticleFactory _particleFactory;
 
         public IEnumerable<Particle> Particles
         {
@@ -36,7 +34,7 @@ namespace TechfairKinect.StringDisplay
             get { return _size; }
             set
             {
-                _particles = _particleStringGenerator.GenerateParticles(value).ToList();
+                _particles = _particleFactory.Create(value).ToList();
                 UsableJoints.ToList().ForEach(joint => _jointParticleIntervals[joint] = null);
                 _size = value;
             }
@@ -46,30 +44,8 @@ namespace TechfairKinect.StringDisplay
         {
             _jointParticleIntervals = new Dictionary<JointType, Tuple<int, int>>();
 
-            _particleStringGenerator = new ParticleStringGenerator(GetParticleString(), GetParticleRadius());
-            _particles = _particleStringGenerator.GenerateParticles(screenBounds).ToList();
-        }
-
-        private static string GetParticleString()
-        {
-            if (!ConfigurationManager.AppSettings.AllKeys.Contains(ParticleStringSettingsKey))
-                throw new ConfigurationErrorsException(string.Format("Key {0} not found in settings", ParticleStringSettingsKey));
-
-            return ConfigurationManager.AppSettings[ParticleStringSettingsKey];
-        }
-
-        private static double GetParticleRadius()
-        {
-            if (!ConfigurationManager.AppSettings.AllKeys.Contains(ParticleRadiusSettingsKey))
-                throw new ConfigurationErrorsException(string.Format("Key {0} not found in settings", ParticleRadiusSettingsKey));
-
-            var value = ConfigurationManager.AppSettings[ParticleRadiusSettingsKey];
-            double radius;
-
-            if (!double.TryParse(value, out radius))
-                throw new ConfigurationErrorsException(string.Format("Invalid value \"{0}\" for settings key {1} (expected double)", value, ParticleRadiusSettingsKey));
-
-            return radius;
+            _particleFactory = new ParticleFactory();
+            _particles = _particleFactory.Create(screenBounds).ToList();
         }
 
         public void UpdatePhysics(double timeStep)

@@ -76,6 +76,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringDisplay\CircularParticleController.cs" />
+    <Compile Include="StringDisplay\ParticleStringGeneration\ParticleFactory.cs" />
     <Compile Include="StringDisplay\Rendering\GdiParticleRenderer.cs" />
     <Compile Include="StringDisplay\Rendering\GdiStringDisplayRenderer.cs" />
     <Compile Include="StringDisplay\Rendering\IParticleRenderer.cs" />
@@ -110,6 +111,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Architecture.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
