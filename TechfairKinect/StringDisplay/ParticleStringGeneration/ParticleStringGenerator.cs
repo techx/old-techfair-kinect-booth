@@ -7,11 +7,11 @@ namespace TechfairKinect.StringDisplay.ParticleStringGeneration
 {
     internal class ParticleStringGenerator
     {
-        private readonly string _displayString;
-        private readonly double _particleRadius;
-
         private const PixelFormat BitmapPixelFormat = PixelFormat.Format16bppRgb555;
         private const int BytesPerPixel = 2;
+
+        private readonly string _displayString;
+        private readonly double _particleRadius;
 
         public ParticleStringGenerator(string displayString, double particleRadius)
         {
@@ -30,7 +30,9 @@ namespace TechfairKinect.StringDisplay.ParticleStringGeneration
                 .GenerateParticlePositions(bitmap, BytesPerPixel, stringRectangle, (int)_particleRadius);
 
             return particleLocations.Select(location =>
-                new Particle(new Point(location.X + stringRectangle.X, location.Y + stringRectangle.Y), _particleRadius));
+                new Particle(
+                    new Point(location.X + stringRectangle.X, location.Y + stringRectangle.Y), 
+                    _particleRadius));
         }
     }
 }
