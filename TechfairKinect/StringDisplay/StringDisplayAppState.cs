@@ -14,6 +14,19 @@ namespace TechfairKinect.StringDisplay
 
         public AppStateType AppStateType { get { return AppStateType.StringDisplay; } }
 
+        private Size _appSize;
+        public Size AppSize
+        {
+            get { return _appSize; }
+            set
+            {
+                if (_appSize == value)
+                    return;
+                _appSize = value;
+                _particleController.Size = _appSize;
+            }
+        }
+
         public event EventHandler<StateChangeRequestedEventArgs> StateChangeRequested;
 
         public IEnumerable<Particle> Particles { get { return _particleController.Particles; } }

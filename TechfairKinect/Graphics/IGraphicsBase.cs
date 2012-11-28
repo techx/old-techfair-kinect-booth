@@ -6,6 +6,7 @@ namespace TechfairKinect.Graphics
     internal interface IGraphicsBase
     {
         event EventHandler OnExit;
+        event EventHandler<SizeChangedEventArgs> OnSizeChanged;
         Size ScreenBounds { get; }
 
         void Render(Action<object> paint);

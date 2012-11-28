@@ -15,6 +15,7 @@ namespace TechfairKinect.Graphics
         private Action<PaintEventArgs> _paint;
 
         public override event EventHandler OnExit;
+        public override event EventHandler<SizeChangedEventArgs> OnSizeChanged;
         public override Size ScreenBounds
         {
             get { return _form.Size; }
@@ -52,10 +53,17 @@ namespace TechfairKinect.Graphics
         private void CreateForm()
         {
             _form = new GdiDisplay();
-            _form.Paint += new PaintEventHandler(OnPaint);
-            _form.FormClosed += new FormClosedEventHandler(OnClosed);
+            _form.Paint += new PaintEventHandler(OnFormPaint);
+            _form.FormClosed += new FormClosedEventHandler(OnFormClosed);
+            _form.SizeChanged += OnFormSizeChanged;
 
             Application.Run(_form);
+        }
+
+        private void OnFormSizeChanged(object sender, EventArgs e)
+        {
+            if (OnSizeChanged != null)
+                OnSizeChanged(this, new SizeChangedEventArgs(_form.Size));
         }
 
         private Size GetFormScreenSize()
@@ -77,7 +85,7 @@ namespace TechfairKinect.Graphics
             return _form.Size == screenBounds;
         }
 
-        private void OnPaint(object sender, PaintEventArgs e)
+        private void OnFormPaint(object sender, PaintEventArgs e)
         {
             if (_paint == null)
                 return;
@@ -88,7 +96,7 @@ namespace TechfairKinect.Graphics
                 _paint(e);
         }
 
-        private void OnClosed(object sender, FormClosedEventArgs e)
+        private void OnFormClosed(object sender, FormClosedEventArgs e)
         {
             if (OnExit != null)
                 OnExit(this, null);

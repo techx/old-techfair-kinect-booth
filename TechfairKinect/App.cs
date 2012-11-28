@@ -34,12 +34,18 @@ namespace TechfairKinect
 
             _graphicsBase = new GraphicsBaseFactory().Create();
             _graphicsBase.OnExit += new EventHandler(ExitHandler);
+            _graphicsBase.OnSizeChanged += SizeChangedHandler;
 
             _appStates = new AppStateFactory().CreateAppStates(_graphicsBase.ScreenBounds);
 
             _renderers = new AppStateRendererFactory().Create().ToDictionary(appStateRenderer => appStateRenderer.AppStateType);
 
             _gestureRecognizer = new GestureRecognizerFactory().Create();
+        }
+
+        private void SizeChangedHandler(object sender, SizeChangedEventArgs e)
+        {
+            _currentAppState.AppSize = e.Size;
         }
 
         private void StateChangeRequestedHandler(object sender, StateChangeRequestedEventArgs args)
@@ -53,6 +59,7 @@ namespace TechfairKinect
                 {
                     _currentAppState = _appStates[appStateType];
                     _currentAppState.StateChangeRequested += StateChangeRequestedHandler;
+                    _currentAppState.AppSize = _graphicsBase.ScreenBounds;
 
                     _currentRenderer = _renderers[appStateType];
                     _currentRenderer.AppState = _currentAppState;

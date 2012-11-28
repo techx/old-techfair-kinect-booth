@@ -1,12 +1,14 @@
 ﻿using System;
 using Microsoft.Kinect;
 using TechfairKinect.Gestures;
+using System.Drawing;
 
 namespace TechfairKinect.AppState
 {
     internal interface IAppState
     {
         AppStateType AppStateType { get; }
+        Size AppSize { get; set; }
 
         event EventHandler<StateChangeRequestedEventArgs> StateChangeRequested;
 

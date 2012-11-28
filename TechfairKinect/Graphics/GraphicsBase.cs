@@ -6,6 +6,7 @@ namespace TechfairKinect.Graphics
     internal abstract class GraphicsBase<TSurface> : IGraphicsBase<TSurface>
     {
         public abstract event EventHandler OnExit;
+        public abstract event EventHandler<SizeChangedEventArgs> OnSizeChanged;
         public abstract Size ScreenBounds { get; }
 
         public abstract void Render(Action<TSurface> paint);
