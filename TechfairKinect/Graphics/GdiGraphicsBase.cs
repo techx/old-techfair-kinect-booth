@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace TechfairKinect.Graphics
 {
@@ -12,10 +14,11 @@ namespace TechfairKinect.Graphics
     {
         private Form _form;
         private Thread _thread;
-        private Action<PaintEventArgs> _paint;
+        private Dictionary<object, Action<PaintEventArgs>> _renderers;
 
         public override event EventHandler OnExit;
         public override event EventHandler<SizeChangedEventArgs> OnSizeChanged;
+        public override event EventHandler<KeyEventArgs> OnKeyPressed;
         public override Size ScreenBounds
         {
             get { return _form.Size; }
@@ -23,6 +26,8 @@ namespace TechfairKinect.Graphics
 
         public GdiGraphicsBase()
         {
+            _renderers = new Dictionary<object, Action<PaintEventArgs>>();
+
             _thread = new Thread(CreateForm);
             _thread.Start();
 
@@ -56,6 +61,7 @@ namespace TechfairKinect.Graphics
             _form.Paint += new PaintEventHandler(OnFormPaint);
             _form.FormClosed += new FormClosedEventHandler(OnFormClosed);
             _form.SizeChanged += OnFormSizeChanged;
+            _form.KeyDown += OnFormKeyPressed;
 
             Application.Run(_form);
         }
@@ -64,6 +70,12 @@ namespace TechfairKinect.Graphics
         {
             if (OnSizeChanged != null)
                 OnSizeChanged(this, new SizeChangedEventArgs(_form.Size));
+        }
+
+        private void OnFormKeyPressed(object sender, KeyEventArgs e)
+        {
+            if (OnKeyPressed != null)
+                OnKeyPressed(this, e);
         }
 
         private Size GetFormScreenSize()
@@ -87,13 +99,18 @@ namespace TechfairKinect.Graphics
 
         private void OnFormPaint(object sender, PaintEventArgs e)
         {
-            if (_paint == null)
+            if (_renderers.Count == 0)
                 return;
 
             if (_form.InvokeRequired)
-                _form.Invoke(_paint, e);
+                _form.Invoke((Action<PaintEventArgs>)DoRender, e);
             else
-                _paint(e);
+                DoRender(e);
+        }
+
+        private void DoRender(PaintEventArgs e)
+        {
+            _renderers.Values.ToList().ForEach(action => action(e));
         }
 
         private void OnFormClosed(object sender, FormClosedEventArgs e)
@@ -102,9 +119,9 @@ namespace TechfairKinect.Graphics
                 OnExit(this, null);
         }
 
-        public override void Render(Action<PaintEventArgs> paint)
+        public override void Render(object sender, Action<PaintEventArgs> paint)
         {
-            _paint = paint;
+            _renderers[sender] = paint;
             _form.Invalidate();
         }
     }

@@ -5,8 +5,11 @@ namespace TechfairKinect.StringDisplay
 {
     internal class Particle
     {
+        private static double MaxVelocity = double.Parse(ConfigurationManager.AppSettings["MaxVelocity"]);
+        private static Vector3D MaxVelocityVector = new Vector3D(MaxVelocity, MaxVelocity, MaxVelocity);
+
         private static double FrictionCoefficient = double.Parse(ConfigurationManager.AppSettings["FrictionCoefficient"]);
-        private static Vector3D FrictionVector = new Vector3D { X = FrictionCoefficient, Y = FrictionCoefficient, Z = FrictionCoefficient };
+        private static Vector3D FrictionVector = new Vector3D(FrictionCoefficient, FrictionCoefficient, FrictionCoefficient);
         private static double RestoringCoefficient = double.Parse(ConfigurationManager.AppSettings["RestoringCoefficient"]);
 
         public double Radius { get; set; }
@@ -19,16 +22,18 @@ namespace TechfairKinect.StringDisplay
         //DeactivatedCenter = ProjectedCenter => particle is deactivated and returning (or at) to natural position
         //DeactivatedCenter is just used to cache the original position of the particle in the string so it doesn't have to be recalculated
 
+        public bool Exploding { get; set; }
+
         public Particle()
         {
         }
 
-        public Particle(Point position, double radius)
+        public Particle(Vector3D position, double radius)
             : this(position, radius, new Vector3D(Vector3D.Zero))
         {
         }
 
-        public Particle(Point position, double radius, Vector3D velocity)
+        public Particle(Vector3D position, double radius, Vector3D velocity)
         {
             Radius = radius;
 
@@ -36,14 +41,30 @@ namespace TechfairKinect.StringDisplay
             Velocity = velocity;
 
             DeactivatedCenter = new Vector3D(position);
-            ProjectedCenter = new Vector3D(position);            
-        }
+            ProjectedCenter = new Vector3D(position);
 
+            Exploding = false;
+        }
+    
         public void Update(double timeStep)
         {
             Position += timeStep * Velocity;
+            
+            if (!Exploding)
+                UpdateVelocity(timeStep); 
+        }
 
-            Velocity += timeStep * Vector3D.ComponentMax(Vector3D.Zero, RestoringCoefficient * (Position - ProjectedCenter) - FrictionVector);
+        private void UpdateVelocity(double timeStep)
+        {
+            var deltaPosition = ProjectedCenter - Position;
+
+            var newVelocity = Velocity + timeStep * RestoringCoefficient * deltaPosition;
+            newVelocity += Vector3D.ComponentMult(-Velocity.ComponentSign(), Vector3D.ComponentMin(Velocity.ComponentAbs(), FrictionVector));
+
+            var maxVelocity = 3.0 / 2 / timeStep * deltaPosition.ComponentAbs(); //P + ts * V - PC <= 1/2 (PC - P) -> V <= 3/(2ts) (PC - P)
+
+            Velocity = Vector3D.ComponentMin(maxVelocity, Vector3D.ComponentMax(-maxVelocity, newVelocity)); //so it eventually converges
+            Velocity = Vector3D.ComponentMin(MaxVelocityVector, Vector3D.ComponentMax(newVelocity, -MaxVelocityVector)); //so it's not too fast
         }
 
         public Particle Interpolate(double interpolation)
@@ -60,13 +81,13 @@ namespace TechfairKinect.StringDisplay
             };
         }
 
-        public RectangleF ToRectangleF()
+        public RectangleF ToScaledRectangleF(Size screenBounds)
         {
             var size = (float)(2 * Radius);
             return new RectangleF
             {
-                X = (float)(Position.X - Radius),
-                Y = (float)(Position.Y - Radius),
+                X = (float)(Position.X * screenBounds.Width - Radius),
+                Y = (float)(Position.Y * screenBounds.Height - Radius),
                 Width = size,
                 Height = size
             };

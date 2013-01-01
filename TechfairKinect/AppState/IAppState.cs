@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Drawing;
+using System.Collections.Generic;
 using Microsoft.Kinect;
 using TechfairKinect.Gestures;
-using System.Drawing;
+using TechfairKinect.StringDisplay;
 
 namespace TechfairKinect.AppState
 {
@@ -13,7 +15,7 @@ namespace TechfairKinect.AppState
         event EventHandler<StateChangeRequestedEventArgs> StateChangeRequested;
 
         void UpdatePhysics(double timeStep);
-        void UpdateJoint(Joint joint);
+        void UpdateSkeleton(Dictionary<JointType, ScaledJoint> skeleton);
         void OnGesture(GestureType gestureType);
 
         void OnTransitionTo();

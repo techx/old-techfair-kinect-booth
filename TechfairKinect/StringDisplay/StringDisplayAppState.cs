@@ -41,21 +41,24 @@ namespace TechfairKinect.StringDisplay
             _particleController.UpdatePhysics(timeStep);
         }
 
-        public void UpdateJoint(Joint joint)
+        public void UpdateSkeleton(Dictionary<JointType, ScaledJoint> scaledSkeleton)
         {
             if (_ready)
-                _particleController.UpdateJoint(joint);
+                _particleController.UpdateSkeleton(scaledSkeleton);
         }
 
         public void OnGesture(GestureType gestureType)
         {
-            throw new NotImplementedException();
+            if (gestureType == GestureType.ExplodeOut)
+                _particleController.ExplodeOut(() => System.Diagnostics.Debug.WriteLine("Exploded out"));
+            if (gestureType == GestureType.ExplodeIn)
+                _particleController.ExplodeIn(() => System.Diagnostics.Debug.WriteLine("Exploded in"));
         }
 
         public void OnTransitionTo()
         {
             _ready = false;
-            _particleController.FlyIn(() => _ready = true);
+            _particleController.ExplodeIn(() => _ready = true);
         }
 
         public void OnTransitionFrom(Action onCompleted)

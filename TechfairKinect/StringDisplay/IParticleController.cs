@@ -11,9 +11,9 @@ namespace TechfairKinect.StringDisplay
         Size Size { get; set; }
 
         void UpdatePhysics(double timeStep);
-        void UpdateJoint(Joint joint);
+        void UpdateSkeleton(Dictionary<JointType, ScaledJoint> scaledSkeleton);
 
         void ExplodeOut(Action onCompleted);
-        void FlyIn(Action onCompleted);
+        void ExplodeIn(Action onCompleted);
     }
 }

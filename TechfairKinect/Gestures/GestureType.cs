@@ -2,5 +2,7 @@
 {
     internal enum GestureType
     {
+        ExplodeOut,
+        ExplodeIn
     }
 }

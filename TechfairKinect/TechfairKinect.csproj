@@ -35,7 +35,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Kinect, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Kinect, Version=1.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -58,6 +58,7 @@
     <Compile Include="Factories\SettingsBasedCollectionFactory.cs" />
     <Compile Include="Factories\SettingsBasedFactory.cs" />
     <Compile Include="Factories\SettingsBasedSingularFactory.cs" />
+    <Compile Include="Gestures\Keyboard\KeyboardSkeletonFactory.cs" />
     <Compile Include="Graphics\GdiDisplay.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -68,17 +69,25 @@
     <Compile Include="Gestures\GestureType.cs" />
     <Compile Include="Gestures\IGestureRecognizer.cs" />
     <Compile Include="AppState\IAppState.cs" />
-    <Compile Include="Gestures\KeyboardGestureRecognizer.cs" />
+    <Compile Include="Gestures\Keyboard\KeyboardGestureRecognizer.cs" />
     <Compile Include="Graphics\GdiGraphicsBase.cs" />
     <Compile Include="Graphics\GraphicsBase.cs" />
     <Compile Include="Graphics\GraphicsBaseFactory.cs" />
     <Compile Include="Graphics\IGraphicsBase.cs" />
     <Compile Include="Graphics\SizeChangedEventArgs.cs" />
+    <Compile Include="Graphics\SkeletonRenderer\GdiSkeletonRenderer.cs" />
+    <Compile Include="Graphics\SkeletonRenderer\SkeletonRendererFactory.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StringDisplay\AdjacentJointPair.cs" />
-    <Compile Include="StringDisplay\AdjacentJointPairFactory.cs" />
+    <Compile Include="Graphics\SkeletonRenderer\ISkeletonRenderer.cs" />
+    <Compile Include="StringDisplay\ParticleManipulation\AdjacentJointPair.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StringDisplay\ParticleManipulation\AdjacentJointPairFactory.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="StringDisplay\CircularParticleController.cs" />
+    <Compile Include="StringDisplay\ParticleManipulation\IntervaledParticleContainer.cs" />
     <Compile Include="StringDisplay\ParticleStringGeneration\ParticleFactory.cs" />
     <Compile Include="StringDisplay\Rendering\GdiParticleRenderer.cs" />
     <Compile Include="StringDisplay\Rendering\GdiStringDisplayRenderer.cs" />
@@ -90,10 +99,12 @@
     <Compile Include="StringDisplay\ParticleStringGeneration\BitmapToParticlePositionConverter.cs" />
     <Compile Include="StringDisplay\ParticleStringGeneration\ParticleStringGenerator.cs" />
     <Compile Include="StringDisplay\ParticleStringGeneration\StringBitmapGenerator.cs" />
+    <Compile Include="ScaledJoint.cs" />
     <Compile Include="StringDisplay\StringDisplayAppState.cs" />
-    <Compile Include="StringDisplay\Vector3D.cs" />
+    <Compile Include="Vector3D.cs" />
     <EmbeddedResource Include="Graphics\GdiDisplay.resx">
       <DependentUpon>GdiDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -104,7 +115,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

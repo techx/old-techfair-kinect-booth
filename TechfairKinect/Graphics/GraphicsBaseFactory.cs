@@ -8,11 +8,11 @@ namespace TechfairKinect.Graphics
     {
         protected override string SettingsKey { get { return "GraphicsImplementation"; } }
 
-        private static Dictionary<string, Type> _subclassesByName = new Dictionary<string, Type>()
+        private static Dictionary<string, Type> _implementationsByName = new Dictionary<string, Type>()
         {
             { "Gdi", typeof(GdiGraphicsBase) }
         };
 
-        protected override Dictionary<string, Type> ImplementationsBySettingsValue { get { return _subclassesByName; } }
+        protected override Dictionary<string, Type> ImplementationsBySettingsValue { get { return _implementationsByName; } }
     }
 }

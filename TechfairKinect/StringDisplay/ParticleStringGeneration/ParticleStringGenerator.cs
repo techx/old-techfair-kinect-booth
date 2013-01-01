@@ -31,8 +31,10 @@ namespace TechfairKinect.StringDisplay.ParticleStringGeneration
 
             return particleLocations.Select(location =>
                 new Particle(
-                    new Point(location.X + stringRectangle.X, location.Y + stringRectangle.Y), 
-                    _particleRadius));
+                    new Vector3D(
+                        (double)(location.X + stringRectangle.X) / screenBounds.Width,
+                        (double)(location.Y + stringRectangle.Y) / screenBounds.Height,
+                        0), _particleRadius));
         }
     }
 }
