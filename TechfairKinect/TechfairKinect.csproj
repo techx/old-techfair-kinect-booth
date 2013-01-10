@@ -52,13 +52,37 @@
     <Compile Include="App.cs" />
     <Compile Include="AppState\AppStateFactory.cs" />
     <Compile Include="AppState\AppStateRendererFactory.cs" />
-    <Compile Include="AppState\AppStateType.cs" />
-    <Compile Include="AppState\IAppStateRenderer.cs" />
     <Compile Include="AppState\StateChangeRequestedEventArgs.cs" />
+    <Compile Include="Components\ComponentFactory.cs" />
+    <Compile Include="Components\ComponentType.cs" />
+    <Compile Include="Components\IComponent.cs" />
+    <Compile Include="Components\IComponentRenderer.cs" />
+    <Compile Include="Components\Particles\CircularParticleComponent.cs" />
+    <Compile Include="Components\Particles\GdiParticleComponentRenderer.cs" />
+    <Compile Include="Components\Particles\Particle.cs" />
+    <Compile Include="Components\Particles\ParticleComponent.cs" />
+    <Compile Include="Components\Particles\ParticleComponentRenderer.cs" />
+    <Compile Include="Components\Particles\ParticleManipulation\AdjacentJointPair.cs" />
+    <Compile Include="Components\Particles\ParticleManipulation\AdjacentJointPairFactory.cs" />
+    <Compile Include="Components\Particles\ParticleManipulation\IntervaledParticleContainer.cs" />
+    <Compile Include="Components\Particles\ParticleStringGeneration\BitmapToParticlePositionConverter.cs" />
+    <Compile Include="Components\Particles\ParticleStringGeneration\ParticleFactory.cs" />
+    <Compile Include="Components\Particles\ParticleStringGeneration\ParticleStringGenerator.cs" />
+    <Compile Include="Components\Particles\ParticleStringGeneration\StringBitmapGenerator.cs" />
+    <Compile Include="Components\Skeleton\GdiSkeletonComponentRenderer.cs" />
+    <Compile Include="Components\Skeleton\SkeletonComponentRenderer.cs" />
+    <Compile Include="Components\Skeleton\SkeletonComponent.cs" />
     <Compile Include="Factories\SettingsBasedCollectionFactory.cs" />
     <Compile Include="Factories\SettingsBasedFactory.cs" />
     <Compile Include="Factories\SettingsBasedSingularFactory.cs" />
     <Compile Include="Gestures\Keyboard\KeyboardSkeletonFactory.cs" />
+    <Compile Include="Gestures\Kinect\KinectGestureRecognizer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Gestures\Kinect\KinectSensorWrapper.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Gestures\Kinect\SkeletonReadEventArgs.cs" />
     <Compile Include="Graphics\GdiDisplay.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -75,30 +99,10 @@
     <Compile Include="Graphics\GraphicsBaseFactory.cs" />
     <Compile Include="Graphics\IGraphicsBase.cs" />
     <Compile Include="Graphics\SizeChangedEventArgs.cs" />
-    <Compile Include="Graphics\SkeletonRenderer\GdiSkeletonRenderer.cs" />
-    <Compile Include="Graphics\SkeletonRenderer\SkeletonRendererFactory.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Graphics\SkeletonRenderer\ISkeletonRenderer.cs" />
-    <Compile Include="StringDisplay\ParticleManipulation\AdjacentJointPair.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StringDisplay\ParticleManipulation\AdjacentJointPairFactory.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="StringDisplay\CircularParticleController.cs" />
-    <Compile Include="StringDisplay\ParticleManipulation\IntervaledParticleContainer.cs" />
-    <Compile Include="StringDisplay\ParticleStringGeneration\ParticleFactory.cs" />
-    <Compile Include="StringDisplay\Rendering\GdiParticleRenderer.cs" />
-    <Compile Include="StringDisplay\Rendering\GdiStringDisplayRenderer.cs" />
-    <Compile Include="StringDisplay\Rendering\IParticleRenderer.cs" />
-    <Compile Include="StringDisplay\Rendering\StringDisplayRenderer.cs" />
-    <Compile Include="StringDisplay\IParticleController.cs" />
-    <Compile Include="StringDisplay\Particle.cs" />
-    <Compile Include="StringDisplay\ParticleControllerFactory.cs" />
-    <Compile Include="StringDisplay\ParticleStringGeneration\BitmapToParticlePositionConverter.cs" />
-    <Compile Include="StringDisplay\ParticleStringGeneration\ParticleStringGenerator.cs" />
-    <Compile Include="StringDisplay\ParticleStringGeneration\StringBitmapGenerator.cs" />
+    <Compile Include="StringDisplay\GdiStringDisplayRenderer.cs" />
+    <Compile Include="StringDisplay\StringDisplayRenderer.cs" />
     <Compile Include="ScaledJoint.cs" />
     <Compile Include="StringDisplay\StringDisplayAppState.cs" />
     <Compile Include="Vector3D.cs" />
@@ -131,6 +135,7 @@
   <ItemGroup>
     <Content Include="Architecture.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

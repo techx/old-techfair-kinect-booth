@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using Microsoft.Kinect;
 using TechfairKinect.AppState;
 using TechfairKinect.Gestures;
+using TechfairKinect.Components;
+using TechfairKinect.Components.Particles;
 
 namespace TechfairKinect.StringDisplay
 {
     internal class StringDisplayAppState : IAppState
     {
-        private IParticleController _particleController;
-        private bool _ready;
-
-        public AppStateType AppStateType { get { return AppStateType.StringDisplay; } }
+        public RectangleF ComponentRectangle { get { return new RectangleF(0.0f, 0.0f, _appSize.Width, _appSize.Height); } }
+        public ComponentType ComponentType { get { return ComponentType.StringDisplay; } }
 
         private Size _appSize;
         public Size AppSize
@@ -23,47 +24,57 @@ namespace TechfairKinect.StringDisplay
                 if (_appSize == value)
                     return;
                 _appSize = value;
-                _particleController.Size = _appSize;
+
+                Components.ForEach(c => c.AppSize = value);
             }
         }
 
+        public List<IComponent> Components { get; set; }
+        public List<IComponentRenderer> Renderers { get; set; }
+
+        private ParticleComponent _particleComponent { get; set; }
+
         public event EventHandler<StateChangeRequestedEventArgs> StateChangeRequested;
 
-        public IEnumerable<Particle> Particles { get { return _particleController.Particles; } }
+        public IEnumerable<Particle> Particles { get { return _particleComponent.Particles; } }
 
         public StringDisplayAppState(Size screenBounds)
         {
-            _particleController = new ParticleControllerFactory(screenBounds).Create();
+            var componentTuple = new ComponentFactory().CreateStringDisplayComponentRendererTupes(screenBounds).ToList();
+            Components = componentTuple.Select(tuple => tuple.Item1).ToList();
+            Renderers = componentTuple.Select(tuple => tuple.Item2).ToList();
+
+            _particleComponent = (ParticleComponent)Components.Single(c => c.ComponentType == ComponentType.Particles);
         }
 
-        public void UpdatePhysics(double timeStep)
+        public void ResetSkeleton()
         {
-            _particleController.UpdatePhysics(timeStep);
+            Components.ForEach(c => c.ResetSkeleton());
         }
 
         public void UpdateSkeleton(Dictionary<JointType, ScaledJoint> scaledSkeleton)
         {
-            if (_ready)
-                _particleController.UpdateSkeleton(scaledSkeleton);
+            Components.ForEach(c => c.UpdateSkeleton(scaledSkeleton));
+        }
+
+        public void UpdatePhysics(double timeStep)
+        {
+            Components.ForEach(c => c.UpdatePhysics(timeStep));
         }
 
         public void OnGesture(GestureType gestureType)
         {
-            if (gestureType == GestureType.ExplodeOut)
-                _particleController.ExplodeOut(() => System.Diagnostics.Debug.WriteLine("Exploded out"));
-            if (gestureType == GestureType.ExplodeIn)
-                _particleController.ExplodeIn(() => System.Diagnostics.Debug.WriteLine("Exploded in"));
+            Components.ForEach(c => c.OnGesture(gestureType));
         }
 
         public void OnTransitionTo()
         {
-            _ready = false;
-            _particleController.ExplodeIn(() => _ready = true);
+            _particleComponent.ExplodeIn(() => { });
         }
 
         public void OnTransitionFrom(Action onCompleted)
         {
-            _particleController.ExplodeOut(onCompleted);
+            _particleComponent.ExplodeOut(onCompleted);
         }
     }
 }

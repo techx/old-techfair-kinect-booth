@@ -1,14 +1,17 @@
 ﻿using System;
+using TechfairKinect.Components;
 
 namespace TechfairKinect.AppState
 {
     internal class StateChangeRequestedEventArgs : EventArgs
     {
-        public AppStateType AppStateType { get; set; }
+        public ComponentType ComponentType { get; set; }
+        public object Args { get; set; }
 
-        public StateChangeRequestedEventArgs(AppStateType appStateType)
+        public StateChangeRequestedEventArgs(ComponentType componentType, object args)
         {
-            AppStateType = AppStateType;
+            ComponentType = componentType;
+            Args = args;
         }
     }
 }

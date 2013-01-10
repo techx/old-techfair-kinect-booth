@@ -4,13 +4,12 @@ using System.Drawing.Imaging;
 using System.Windows.Forms;
 using Gdi = System.Drawing;
 
-namespace TechfairKinect.StringDisplay.ParticleStringGeneration
+namespace TechfairKinect.Components.Particles.ParticleStringGeneration
 {
     //binary search on a font size (generic monospace font) to find the largest font size that will display nicely
     //then generate bitmap the size of the screen with text centered
     internal class StringBitmapGenerator
     {
-        private static FontFamily FontFamily = FontFamily.GenericSansSerif;
         private const int MaxFontSize = 500;
         private const int MinFontSize = 50;
 
@@ -22,11 +21,13 @@ namespace TechfairKinect.StringDisplay.ParticleStringGeneration
         public Rectangle StringRectangle { get { return _stringRectangle; } }
 
         private readonly PixelFormat _pixelFormat;
+        private readonly FontFamily _fontFamily;
 
-        public StringBitmapGenerator(string displayString, PixelFormat pixelFormat)
+        public StringBitmapGenerator(string displayString, PixelFormat pixelFormat, FontFamily fontFamily)
         {
             _displayString = displayString;
             _pixelFormat = pixelFormat;
+            _fontFamily = fontFamily;
         }
 
         public Bitmap CreateBitmap(Size screenBounds)
@@ -52,7 +53,7 @@ namespace TechfairKinect.StringDisplay.ParticleStringGeneration
         {
             using (var graphics = Gdi.Graphics.FromImage(bitmap))
             using (var brush = new SolidBrush(Color.White))
-            using (var font = new Font(FontFamily, fontSize))
+            using (var font = new Font(_fontFamily, fontSize))
             {
                 graphics.FillRectangle(brush, rectangle); //clear bitmap
 
@@ -95,7 +96,7 @@ namespace TechfairKinect.StringDisplay.ParticleStringGeneration
 
         private Size GetStringSize(float fontSize)
         {
-            using (var font = new Font(FontFamily, fontSize))
+            using (var font = new Font(_fontFamily, fontSize))
                 return TextRenderer.MeasureText(_displayString, font);
         }
 

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using TechfairKinect.AppState;
+using TechfairKinect.Components;
 using TechfairKinect.Gestures;
 using TechfairKinect.Graphics;
-using TechfairKinect.Graphics.SkeletonRenderer;
 
 namespace TechfairKinect
 {
@@ -20,14 +20,13 @@ namespace TechfairKinect
         private bool _running;
         private Stopwatch _timer;
 
-        private readonly Dictionary<AppStateType, IAppState> _appStates;
-        private readonly Dictionary<AppStateType, IAppStateRenderer> _appStateRenderers;
+        private readonly Dictionary<ComponentType, IAppState> _appStates;
+        private readonly Dictionary<ComponentType, IComponentRenderer> _appStateRenderers;
 
         private readonly IGraphicsBase _graphicsBase;
 
         private IAppState _currentAppState;
-        private IAppStateRenderer _currentAppStateRenderer;
-        private ISkeletonRenderer _skeletonRenderer;
+        private IComponentRenderer _currentAppStateRenderer;
 
         private readonly IGestureRecognizer _gestureRecognizer;
 
@@ -42,18 +41,13 @@ namespace TechfairKinect
 
             _appStates = new AppStateFactory().CreateAppStates(_graphicsBase.ScreenBounds);
 
-            _appStateRenderers = new AppStateRendererFactory().Create().ToDictionary(appStateRenderer => appStateRenderer.AppStateType);
-
-            _skeletonRenderer = new SkeletonRendererFactory().Create();
-
+            _appStateRenderers = new AppStateRendererFactory().Create().ToDictionary(componentRenderer => componentRenderer.ComponentType);
             _gestureRecognizer = new GestureRecognizerFactory().Create();
-            _gestureRecognizer.SkeletonRenderer = _skeletonRenderer;
         }
 
         private void SizeChangedHandler(object sender, SizeChangedEventArgs e)
         {
             _currentAppState.AppSize = e.Size;
-            _skeletonRenderer.AppSize = e.Size;
         }
 
         private void KeyPressHandler(object sender, KeyEventArgs e)
@@ -64,10 +58,10 @@ namespace TechfairKinect
 
         private void StateChangeRequestedHandler(object sender, StateChangeRequestedEventArgs args)
         {
-            SetCurrentAppState(args.AppStateType);
+            SetCurrentAppState(args.ComponentType);
         }
 
-        private void SetCurrentAppState(AppStateType appStateType)
+        private void SetCurrentAppState(ComponentType appStateType)
         {
             Action onReady = () =>
                 {
@@ -76,10 +70,8 @@ namespace TechfairKinect
                     _currentAppState.AppSize = _graphicsBase.ScreenBounds;
 
                     _currentAppStateRenderer = _appStateRenderers[appStateType];
-                    _currentAppStateRenderer.AppState = _currentAppState;
+                    _currentAppStateRenderer.Component = _currentAppState;
                     _currentAppStateRenderer.GraphicsBase = _graphicsBase;
-
-                    _skeletonRenderer.GraphicsBase = _graphicsBase;
 
                     _gestureRecognizer.CurrentAppState = _currentAppState;
 
@@ -100,7 +92,7 @@ namespace TechfairKinect
             _running = true;
             _timer.Start();
 
-            SetCurrentAppState(AppStateType.StringDisplay);
+            SetCurrentAppState(ComponentType.StringDisplay);
             AppLoop();
         }
 
@@ -139,7 +131,6 @@ namespace TechfairKinect
         private void Render(double interpolation)
         {
             _currentAppStateRenderer.Render(interpolation);
-            _skeletonRenderer.Render();
         }
     }
 }

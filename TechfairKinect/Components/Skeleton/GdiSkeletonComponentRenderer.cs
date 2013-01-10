@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Kinect;
+using System.Text;
 using Gdi = System.Drawing;
+using TechfairKinect.Graphics;
+using System.Configuration;
+using Microsoft.Kinect;
 
-namespace TechfairKinect.Graphics.SkeletonRenderer
+namespace TechfairKinect.Components.Skeleton
 {
-    internal class GdiSkeletonRenderer : ISkeletonRenderer
+    internal class GdiSkeletonComponentRenderer : SkeletonComponentRenderer
     {
-        //maybe make these percentages of the screen size? hmmmmmmmm
+        private static float ThresholdHeight = float.Parse(ConfigurationManager.AppSettings["ScreenThresholdHeightPercentage"]);
+
         private const float BoxPercentageSize = 0.1f;
         private const float BoxEdgeThickness = 5.0f;
 
         private const float LimbThickness = 1.0f;
+        private const float LineThickness = 2.0f;
         private const float JointCircleRadius = 2.0f;
 
         private static List<Tuple<JointType, JointType>> Limbs = new List<Tuple<JointType, JointType>>
@@ -43,54 +48,36 @@ namespace TechfairKinect.Graphics.SkeletonRenderer
             Tuple.Create(JointType.AnkleRight, JointType.FootRight)
         };
 
-        private Dictionary<JointType, ScaledJoint> _currentSkeleton;
-
-        private Gdi.RectangleF _skeletonBox;
-
-        private GdiGraphicsBase _gdiGraphicsBase;
-        public IGraphicsBase GraphicsBase
+        protected GdiGraphicsBase GdiGraphicsBase;
+        public override IGraphicsBase GraphicsBase
         {
-            get { return _gdiGraphicsBase; }
-            set 
-            {
-                _gdiGraphicsBase = (GdiGraphicsBase)value;
-                AppSize = _gdiGraphicsBase.ScreenBounds;
-            }
+            get { return GdiGraphicsBase; }
+            set { GdiGraphicsBase = (GdiGraphicsBase)value; }
         }
 
-        private Gdi.Size _appSize;
-        public Gdi.Size AppSize
+        public override void Render(double interpolation)
         {
-            get { return _appSize; }
-            set
-            {
-                _appSize = value;
-                _skeletonBox = CreateSkeletonBox();
-            }
-        }
-
-        public void UpdateSkeleton(Dictionary<JointType, ScaledJoint> skeleton)
-        {
-            _currentSkeleton = skeleton;
-        }
-
-        public void Render()
-        {
-            _gdiGraphicsBase.Render(this, args => Render(args.Graphics));
+            GdiGraphicsBase.Render(this, args => Render(args.Graphics));
         }
 
         private void Render(Gdi.Graphics graphics)
-        { 
+        {
             using (var boxPen = new Gdi.Pen(Gdi.Color.Black, BoxEdgeThickness))
             using (var jointBrush = new Gdi.SolidBrush(Gdi.Color.Black))
-            using (var limbPen = new Gdi.Pen(Gdi.Color.Black, LimbThickness)) 
+            using (var limbPen = new Gdi.Pen(Gdi.Color.Black, LimbThickness))
+            using (var linePen = new Gdi.Pen(Gdi.Color.Red, LineThickness))
             {
-                graphics.DrawRectangle(boxPen, _skeletonBox.X, _skeletonBox.Y, _skeletonBox.Width, _skeletonBox.Height);
+                var skeletonBox = CreateSkeletonBox();
+                var thresholdLineY = skeletonBox.Top + (1 - ThresholdHeight) * skeletonBox.Height;
 
-                if (_currentSkeleton == null) //not initialized yet
+                graphics.DrawRectangle(boxPen, skeletonBox.X, skeletonBox.Y, skeletonBox.Width, skeletonBox.Height);
+
+                graphics.DrawLine(linePen, skeletonBox.Left, thresholdLineY, skeletonBox.Right, thresholdLineY);
+
+                if (base.SkeletonComponent.CurrentSkeleton == null) //not initialized yet
                     return;
 
-                var boxJoints = CalculateBoxJoints();
+                var boxJoints = CalculateBoxJoints(skeletonBox);
 
                 boxJoints.Values.ToList().ForEach(location =>
                     RenderJoint(graphics, jointBrush, location));
@@ -101,22 +88,23 @@ namespace TechfairKinect.Graphics.SkeletonRenderer
 
         private Gdi.RectangleF CreateSkeletonBox()
         {
-            var x = (0.5f - BoxPercentageSize / 2) * _appSize.Width;
-            var y = (1 - BoxPercentageSize) * _appSize.Height;
-            var width = BoxPercentageSize * _appSize.Width;
-            var height = BoxPercentageSize * _appSize.Height;
+            var appSize = GdiGraphicsBase.ScreenBounds;
+            var x = (0.5f - BoxPercentageSize / 2) * appSize.Width;
+            var y = (1 - BoxPercentageSize) * appSize.Height;
+            var width = BoxPercentageSize * appSize.Width;
+            var height = BoxPercentageSize * appSize.Height;
 
             return new Gdi.RectangleF(x, y, width, height);
         }
 
-        private Dictionary<JointType, Vector3D> CalculateBoxJoints()
+        private Dictionary<JointType, Vector3D> CalculateBoxJoints(Gdi.RectangleF skeletonBox)
         {
-            return _currentSkeleton.Select(kvp =>
+            return base.SkeletonComponent.CurrentSkeleton.Select(kvp =>
                     Tuple.Create(
-                        kvp.Key, 
+                        kvp.Key,
                         new Vector3D(
-                            kvp.Value.LocationScreenPercent.X * _skeletonBox.Width + _skeletonBox.X, 
-                            (1 - kvp.Value.LocationScreenPercent.Y) * _skeletonBox.Height + _skeletonBox.Y, //y is flipped
+                            kvp.Value.LocationScreenPercent.X * skeletonBox.Width + skeletonBox.X,
+                            (1 - kvp.Value.LocationScreenPercent.Y) * skeletonBox.Height + skeletonBox.Y, //y is flipped
                             0)))
                 .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
         }
@@ -133,8 +121,7 @@ namespace TechfairKinect.Graphics.SkeletonRenderer
 
         private void RenderLimb(Gdi.Graphics graphics, Gdi.Pen pen, Vector3D lhs, Vector3D rhs)
         {
-            graphics.DrawLine(pen, (float)lhs.X, (float)lhs.Y, (float)rhs.X, (float)rhs.Y); 
+            graphics.DrawLine(pen, (float)lhs.X, (float)lhs.Y, (float)rhs.X, (float)rhs.Y);
         }
     }
 }
- 

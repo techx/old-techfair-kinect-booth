@@ -1,7 +1,7 @@
 ﻿using System.Configuration;
 using System.Drawing;
 
-namespace TechfairKinect.StringDisplay
+namespace TechfairKinect.Components.Particles
 {
     internal class Particle
     {

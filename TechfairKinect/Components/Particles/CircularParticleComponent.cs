@@ -4,12 +4,12 @@ using System.Configuration;
 using System.Drawing;
 using System.Linq;
 using Microsoft.Kinect;
-using TechfairKinect.StringDisplay.ParticleStringGeneration;
-using TechfairKinect.StringDisplay.ParticleManipulation;
+using TechfairKinect.Components.Particles.ParticleManipulation;
+using TechfairKinect.Components.Particles.ParticleStringGeneration;
 
-namespace TechfairKinect.StringDisplay
+namespace TechfairKinect.Components.Particles
 {
-    internal class CircularParticleController : IParticleController
+    internal class CircularParticleComponent : ParticleComponent
     {
         private enum ExplodingState
         { 
@@ -25,12 +25,12 @@ namespace TechfairKinect.StringDisplay
         private readonly ParticleFactory _particleFactory;
 
         private List<Particle> _particles;
-        public IEnumerable<Particle> Particles
+        public override IEnumerable<Particle> Particles
         {
             get { return _particles; }
         }
 
-        private readonly Dictionary<Tuple<JointType, JointType>, AdjacentJointPair> _adjacentJointPairIndexesByJointTypes;
+        private readonly Dictionary<Tuple<JointType, JointType>, AdjacentJointPair> _adjacentJointPairsByJointTypes;
 
         //we don't make it a IntervaledParticleContainer<AdjacentJointPair> because the AJP is mutable and
         //there's a dictionary that uses that as a key. the joint types won't change, so we use that instead
@@ -41,7 +41,7 @@ namespace TechfairKinect.StringDisplay
         private ExplodingState _explodingState;
         private Action _onExplodeCompleted;
 
-        public CircularParticleController(Size screenBounds)
+        public CircularParticleComponent(Size screenBounds)
         {
             _particleFactory = new ParticleFactory();
             _particles = _particleFactory.Create(screenBounds).ToList();
@@ -56,13 +56,13 @@ namespace TechfairKinect.StringDisplay
             _particleContainer = new IntervaledParticleContainer<Tuple<JointType, JointType>>(_particles);
 
             var adjacentJointPairs = new AdjacentJointPairFactory().Create(ScreenThresholdHeightPercentage);
-            _adjacentJointPairIndexesByJointTypes = adjacentJointPairs.ToDictionary(ajp => ajp.JointTypes);
+            _adjacentJointPairsByJointTypes = adjacentJointPairs.ToDictionary(ajp => ajp.JointTypes);
 
             _explodingState = ExplodingState.NotExploding;
             _onExplodeCompleted = null;
         }
 
-        public void UpdatePhysics(double timeStep)
+        public override void UpdatePhysics(double timeStep)
         {
             if (_explodingState == ExplodingState.Exploded)
                 return;
@@ -115,25 +115,33 @@ namespace TechfairKinect.StringDisplay
         private void UpdateActivatedParticlePositions(double timeStep)
         {
             //cache the lookup for speed since we'll be iterating in chunks
-            var currentAjp = _adjacentJointPairIndexesByJointTypes.First().Value;
+            var currentAjp = _adjacentJointPairsByJointTypes.First().Value;
+            lock (_adjacentJointPairsByJointTypes)
+            {
+                _particleContainer.IterateIncludedParticles(
+                    (particleIndex, ajpJoints) =>
+                    {
+                        if (ajpJoints != currentAjp.JointTypes)
+                            currentAjp = _adjacentJointPairsByJointTypes[ajpJoints];
 
-            _particleContainer.IterateIncludedParticles(
-                (particleIndex, ajpJoints) =>
-                {
-                    if (ajpJoints != currentAjp.JointTypes)
-                        currentAjp = _adjacentJointPairIndexesByJointTypes[ajpJoints];
-
-                    _particles[particleIndex].ProjectedCenter =
-                        currentAjp.CalculateScaledProjectedParticleCenter(_particles[particleIndex]);
-
-                    currentAjp.CalculateScaledProjectedParticleCenter(_particles[particleIndex]);
-                });
+                        _particles[particleIndex].ProjectedCenter =
+                            currentAjp.CalculateScaledProjectedParticleCenter(_particles[particleIndex]);
+                    });
+            }
         }
 
-        public void UpdateSkeleton(Dictionary<JointType, ScaledJoint> scaledSkeleton)
+        public override void ResetSkeleton()
         {
-            _adjacentJointPairIndexesByJointTypes.Values.ToList()
-                .ForEach(ajp => UpdateAdjacentJointPair(ajp, scaledSkeleton));
+            _particleContainer.Clear();
+        }
+
+        public override void UpdateSkeleton(Dictionary<JointType, ScaledJoint> scaledSkeleton)
+        {
+            lock (_adjacentJointPairsByJointTypes)
+            {
+                _adjacentJointPairsByJointTypes.Values.ToList()
+                    .ForEach(ajp => UpdateAdjacentJointPair(ajp, scaledSkeleton));
+            }
         }
 
         public void UpdateAdjacentJointPair(AdjacentJointPair ajp, Dictionary<JointType, ScaledJoint> scaledSkeleton)
@@ -163,7 +171,7 @@ namespace TechfairKinect.StringDisplay
             _particleContainer.UpdateInterval(ajp.JointTypes, ajp.XInterval.Item1, ajp.XInterval.Item2);
         }
 
-        public void ExplodeOut(Action onCompleted)
+        public override void ExplodeOut(Action onCompleted)
         {
             if (_explodingState == ExplodingState.Exploded ||
                 _explodingState == ExplodingState.ExplodingOut)
@@ -189,7 +197,7 @@ namespace TechfairKinect.StringDisplay
             }
         }
 
-        public void ExplodeIn(Action onCompleted)
+        public override void ExplodeIn(Action onCompleted)
         {
             if (_explodingState == ExplodingState.NotExploding || 
                 _explodingState == ExplodingState.ExplodingIn)

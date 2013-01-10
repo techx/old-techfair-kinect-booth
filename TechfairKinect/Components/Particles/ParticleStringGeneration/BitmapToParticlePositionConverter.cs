@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 
-namespace TechfairKinect.StringDisplay.ParticleStringGeneration
+namespace TechfairKinect.Components.Particles.ParticleStringGeneration
 {
     //given a text bitmap, perform a greedy algorithm: any (i,j)..(i+2R,j+2R) region with a percentage of nonzero pixels
     //greater than a treshold percentage turns into a particle with center (i+R,j+R) and radius R

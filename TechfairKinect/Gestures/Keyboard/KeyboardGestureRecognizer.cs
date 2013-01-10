@@ -2,7 +2,6 @@
 using System.Windows.Forms;
 using Microsoft.Kinect;
 using TechfairKinect.AppState;
-using TechfairKinect.Graphics.SkeletonRenderer;
 
 namespace TechfairKinect.Gestures.Keyboard
 {
@@ -65,18 +64,7 @@ namespace TechfairKinect.Gestures.Keyboard
                 _currentAppState.UpdateSkeleton(_currentSkeleton);
             }
         }
-
-        private ISkeletonRenderer _skeletonRenderer;
-        public ISkeletonRenderer SkeletonRenderer
-        {
-            get { return _skeletonRenderer; }
-            set
-            {
-                _skeletonRenderer = value;
-                _skeletonRenderer.UpdateSkeleton(_currentSkeleton);
-            }
-        }
-
+        
         private readonly Dictionary<JointType, ScaledJoint> _currentSkeleton;
         private JointType _currentJoint;
 
@@ -124,8 +112,6 @@ namespace TechfairKinect.Gestures.Keyboard
         {
             if (_currentAppState != null)
                 _currentAppState.UpdateSkeleton(_currentSkeleton);
-            if (_skeletonRenderer != null)
-                _skeletonRenderer.UpdateSkeleton(_currentSkeleton);
         }
     }
 }

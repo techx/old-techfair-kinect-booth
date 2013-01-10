@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using TechfairKinect.Components;
 using TechfairKinect.Factories;
-using TechfairKinect.StringDisplay.Rendering;
+using TechfairKinect.StringDisplay;
 
 namespace TechfairKinect.AppState
 {
-    internal class AppStateRendererFactory : SettingsBasedCollectionFactory<IAppStateRenderer>
+    internal class AppStateRendererFactory : SettingsBasedCollectionFactory<IComponentRenderer>
     {
         private static Dictionary<string, IEnumerable<Type>> AppStateRendererCollectionsByImplementation =
             new Dictionary<string, IEnumerable<Type>>()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using TechfairKinect.Components;
 using TechfairKinect.StringDisplay;
 
 namespace TechfairKinect.AppState
@@ -13,12 +14,12 @@ namespace TechfairKinect.AppState
             typeof(StringDisplayAppState)
         };
 
-        public Dictionary<AppStateType, IAppState> CreateAppStates(Size screenBounds)
+        public Dictionary<ComponentType, IAppState> CreateAppStates(Size screenBounds)
         {
             return AppStateTypes
                 .Select(type => 
                     (IAppState)Activator.CreateInstance(type, screenBounds))
-                .ToDictionary(state => state.AppStateType);
+                .ToDictionary(state => state.ComponentType);
         }
     }
 }

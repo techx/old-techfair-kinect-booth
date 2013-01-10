@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TechfairKinect.StringDisplay.ParticleManipulation
+namespace TechfairKinect.Components.Particles.ParticleManipulation
 {
     internal class IntervaledParticleContainer<TIntervalKey>
     {
@@ -111,9 +111,20 @@ namespace TechfairKinect.StringDisplay.ParticleManipulation
             return min;
         }
 
+        public void Clear()
+        {
+            _intervalEdgePoints.Clear();
+
+            _intervalsByKey.ToList().ForEach(kvp =>
+                _removedIntervals.AddLast(Tuple.Create(kvp.Value.Start, kvp.Value.End)));
+
+            _intervalsByKey.Clear();
+        }
+
         public void RemoveInterval(TIntervalKey key)
         {
-            RemoveInterval(_intervalsByKey[key], true);
+            if (_intervalsByKey.ContainsKey(key))
+                RemoveInterval(_intervalsByKey[key], true);
         }
 
         private void RemoveInterval(Interval interval, bool addToRemovalQueue)

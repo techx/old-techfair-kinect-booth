@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Kinect;
 
-namespace TechfairKinect.StringDisplay.ParticleManipulation
+namespace TechfairKinect.Components.Particles.ParticleManipulation
 {
     internal class AdjacentJointPair
     {
@@ -97,7 +97,7 @@ namespace TechfairKinect.StringDisplay.ParticleManipulation
 
         private bool ParticleIsActive(Particle scaledParticle)
         {
-            return _thresholdXIntercept == -1 || 
+            return _thresholdXIntercept != -1 &&
                 ((scaledParticle.DeactivatedCenter.X - _thresholdXIntercept) * _directionSign > 0);
         }
 

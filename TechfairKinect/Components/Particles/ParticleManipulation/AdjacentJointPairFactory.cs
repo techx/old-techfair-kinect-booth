@@ -2,7 +2,7 @@
 using System.Linq;
 using Microsoft.Kinect;
 
-namespace TechfairKinect.StringDisplay.ParticleManipulation
+namespace TechfairKinect.Components.Particles.ParticleManipulation
 {
     internal class AdjacentJointPairFactory
     {
@@ -20,6 +20,12 @@ namespace TechfairKinect.StringDisplay.ParticleManipulation
 
         private IEnumerable<AdjacentJointPair> Enumerate(double thresholdHeight)
         {
+            yield return new 
+                AdjacentJointPair(
+                    JointType.ShoulderCenter, 
+                    JointType.Head, 
+                    thresholdHeight);
+
             for (int i = 0; i < AcceptableJointTypes.Length - 1; i++)
                 yield return 
                     new AdjacentJointPair(
