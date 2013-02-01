@@ -62,9 +62,6 @@
     <Compile Include="Components\Particles\Particle.cs" />
     <Compile Include="Components\Particles\ParticleComponent.cs" />
     <Compile Include="Components\Particles\ParticleComponentRenderer.cs" />
-    <Compile Include="Components\Particles\ParticleManipulation\AdjacentJointPair.cs" />
-    <Compile Include="Components\Particles\ParticleManipulation\AdjacentJointPairFactory.cs" />
-    <Compile Include="Components\Particles\ParticleManipulation\IntervaledParticleContainer.cs" />
     <Compile Include="Components\Particles\ParticleStringGeneration\BitmapToParticlePositionConverter.cs" />
     <Compile Include="Components\Particles\ParticleStringGeneration\ParticleFactory.cs" />
     <Compile Include="Components\Particles\ParticleStringGeneration\ParticleStringGenerator.cs" />
@@ -75,8 +72,10 @@
     <Compile Include="Factories\SettingsBasedCollectionFactory.cs" />
     <Compile Include="Factories\SettingsBasedFactory.cs" />
     <Compile Include="Factories\SettingsBasedSingularFactory.cs" />
+    <Compile Include="Gestures\GestureEventArgs.cs" />
+    <Compile Include="Gestures\GestureRecognizer.cs" />
     <Compile Include="Gestures\Keyboard\KeyboardSkeletonFactory.cs" />
-    <Compile Include="Gestures\Kinect\KinectGestureRecognizer.cs">
+    <Compile Include="Gestures\Kinect\KinectSkeletonUpdater.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Gestures\Kinect\KinectSensorWrapper.cs">
@@ -89,11 +88,11 @@
     <Compile Include="Graphics\GdiDisplay.Designer.cs">
       <DependentUpon>GdiDisplay.cs</DependentUpon>
     </Compile>
-    <Compile Include="Gestures\GestureRecognizerFactory.cs" />
+    <Compile Include="Gestures\SkeletonUpdaterFactory.cs" />
     <Compile Include="Gestures\GestureType.cs" />
-    <Compile Include="Gestures\IGestureRecognizer.cs" />
+    <Compile Include="Gestures\ISkeletonUpdater.cs" />
     <Compile Include="AppState\IAppState.cs" />
-    <Compile Include="Gestures\Keyboard\KeyboardGestureRecognizer.cs" />
+    <Compile Include="Gestures\Keyboard\KeyboardSkeletonUpdater.cs" />
     <Compile Include="Graphics\GdiGraphicsBase.cs" />
     <Compile Include="Graphics\GraphicsBase.cs" />
     <Compile Include="Graphics\GraphicsBaseFactory.cs" />
@@ -131,9 +130,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Architecture.txt" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

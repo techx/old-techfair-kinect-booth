@@ -1,10 +1,12 @@
-﻿using System.Configuration;
+﻿using System.Collections.Generic;
+using System.Configuration;
 using System.Drawing;
 
 namespace TechfairKinect.Components.Particles
 {
     internal class Particle
     {
+        private static int PositionsRemembered = int.Parse(ConfigurationManager.AppSettings["PositionsRemembered"]);
         private static double MaxVelocity = double.Parse(ConfigurationManager.AppSettings["MaxVelocity"]);
         private static Vector3D MaxVelocityVector = new Vector3D(MaxVelocity, MaxVelocity, MaxVelocity);
 
@@ -23,6 +25,8 @@ namespace TechfairKinect.Components.Particles
         //DeactivatedCenter is just used to cache the original position of the particle in the string so it doesn't have to be recalculated
 
         public bool Exploding { get; set; }
+
+        public LinkedList<Vector3D> PreviousPositions { get; set; }
 
         public Particle()
         {
@@ -44,10 +48,20 @@ namespace TechfairKinect.Components.Particles
             ProjectedCenter = new Vector3D(position);
 
             Exploding = false;
+
+            PreviousPositions = new LinkedList<Vector3D>();
         }
     
         public void Update(double timeStep)
         {
+            lock (PreviousPositions)
+            {
+                while (PreviousPositions.Count >= PositionsRemembered)
+                    PreviousPositions.RemoveLast();
+
+                PreviousPositions.AddFirst(Position);
+            }
+
             Position += timeStep * Velocity;
             
             if (!Exploding)
@@ -78,18 +92,6 @@ namespace TechfairKinect.Components.Particles
 
                 DeactivatedCenter = DeactivatedCenter,
                 ProjectedCenter = ProjectedCenter
-            };
-        }
-
-        public RectangleF ToScaledRectangleF(Size screenBounds)
-        {
-            var size = (float)(2 * Radius);
-            return new RectangleF
-            {
-                X = (float)(Position.X * screenBounds.Width - Radius),
-                Y = (float)(Position.Y * screenBounds.Height - Radius),
-                Width = size,
-                Height = size
             };
         }
     }

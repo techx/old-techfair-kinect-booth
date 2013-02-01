@@ -10,6 +10,7 @@ namespace TechfairKinect.Graphics
         public abstract event EventHandler<SizeChangedEventArgs> OnSizeChanged;
         public abstract event EventHandler<KeyEventArgs> OnKeyPressed;
         public abstract Size ScreenBounds { get; }
+        public abstract Color BackgroundColor { get; set; }
 
         public abstract void Render(object sender, Action<TSurface> paint);
 

@@ -62,17 +62,13 @@ namespace TechfairKinect.Components.Skeleton
 
         private void Render(Gdi.Graphics graphics)
         {
-            using (var boxPen = new Gdi.Pen(Gdi.Color.Black, BoxEdgeThickness))
-            using (var jointBrush = new Gdi.SolidBrush(Gdi.Color.Black))
-            using (var limbPen = new Gdi.Pen(Gdi.Color.Black, LimbThickness))
+            using (var boxPen = new Gdi.Pen(Gdi.Color.White, BoxEdgeThickness))
+            using (var jointBrush = new Gdi.SolidBrush(Gdi.Color.White))
+            using (var limbPen = new Gdi.Pen(Gdi.Color.White, LimbThickness))
             using (var linePen = new Gdi.Pen(Gdi.Color.Red, LineThickness))
             {
                 var skeletonBox = CreateSkeletonBox();
-                var thresholdLineY = skeletonBox.Top + (1 - ThresholdHeight) * skeletonBox.Height;
-
                 graphics.DrawRectangle(boxPen, skeletonBox.X, skeletonBox.Y, skeletonBox.Width, skeletonBox.Height);
-
-                graphics.DrawLine(linePen, skeletonBox.Left, thresholdLineY, skeletonBox.Right, thresholdLineY);
 
                 if (base.SkeletonComponent.CurrentSkeleton == null) //not initialized yet
                     return;
@@ -83,6 +79,9 @@ namespace TechfairKinect.Components.Skeleton
                     RenderJoint(graphics, jointBrush, location));
 
                 Limbs.ForEach(tuple => RenderLimb(graphics, limbPen, boxJoints[tuple.Item1], boxJoints[tuple.Item2]));
+
+                var thresholdLineY = skeletonBox.Top + (1 - ThresholdHeight) * skeletonBox.Height;
+                graphics.DrawLine(linePen, skeletonBox.Left, thresholdLineY, skeletonBox.Right, thresholdLineY);
             }
         }
 

@@ -4,7 +4,6 @@ using System.Configuration;
 using System.Drawing;
 using System.Linq;
 using Microsoft.Kinect;
-using TechfairKinect.Components.Particles.ParticleManipulation;
 using TechfairKinect.Components.Particles.ParticleStringGeneration;
 
 namespace TechfairKinect.Components.Particles
@@ -19,6 +18,9 @@ namespace TechfairKinect.Components.Particles
             Exploded
         }
 
+        private const double RadiusMultiplier = 1.1;
+
+        private static double InitialLayerRadius = 0.0075;
         private static double ScreenThresholdHeightPercentage = double.Parse(ConfigurationManager.AppSettings["ScreenThresholdHeightPercentage"]); 
         private static double ExplodeVelocity = double.Parse(ConfigurationManager.AppSettings["ExplodeVelocity"]);
 
@@ -30,16 +32,11 @@ namespace TechfairKinect.Components.Particles
             get { return _particles; }
         }
 
-        private readonly Dictionary<Tuple<JointType, JointType>, AdjacentJointPair> _adjacentJointPairsByJointTypes;
-
-        //we don't make it a IntervaledParticleContainer<AdjacentJointPair> because the AJP is mutable and
-        //there's a dictionary that uses that as a key. the joint types won't change, so we use that instead
-        private IntervaledParticleContainer<Tuple<JointType, JointType>> _particleContainer;
-
-        public Size Size { get; set; }
-
         private ExplodingState _explodingState;
         private Action _onExplodeCompleted;
+
+        private Vector3D _leftHand;
+        private Vector3D _rightHand;
 
         public CircularParticleComponent(Size screenBounds)
         {
@@ -53,31 +50,60 @@ namespace TechfairKinect.Components.Particles
                     (delta > double.Epsilon ? 1 : -1);
             });
 
-            _particleContainer = new IntervaledParticleContainer<Tuple<JointType, JointType>>(_particles);
-
-            var adjacentJointPairs = new AdjacentJointPairFactory().Create(ScreenThresholdHeightPercentage);
-            _adjacentJointPairsByJointTypes = adjacentJointPairs.ToDictionary(ajp => ajp.JointTypes);
-
             _explodingState = ExplodingState.NotExploding;
             _onExplodeCompleted = null;
+
+            _leftHand = null;
+            _rightHand = null;
         }
 
         public override void UpdatePhysics(double timeStep)
         {
             if (_explodingState == ExplodingState.Exploded)
-                return;
-
-            if (_explodingState == ExplodingState.NotExploding)
             {
-                UpdateRecentlyRemovedParticlePositions();
-                UpdateActivatedParticlePositions(timeStep);
+                _particles
+                    .Where(p => p.PreviousPositions.Count > 0)
+                    .ToList()
+                    .ForEach(p => 
+                        {
+                            lock (p.PreviousPositions) 
+                                p.PreviousPositions.RemoveLast();
+                        });
+                return;
             }
-            else if (_explodingState == ExplodingState.ExplodingIn)
+
+            if (_explodingState == ExplodingState.ExplodingIn)
                 CheckExplodingInCompleted();
             else if (_explodingState == ExplodingState.ExplodingOut)
                 CheckExplodingOutCompleted();
 
-            _particles.ForEach(particle => particle.Update(timeStep));
+            UpdateParticleCenters(timeStep);
+        }
+
+        private void UpdateParticleCenters(double timeStep)
+        {
+            lock (_particles)
+            {
+                if (_leftHand == null || _rightHand == null ||
+                    (_leftHand.Y < ScreenThresholdHeightPercentage && _rightHand.Y < ScreenThresholdHeightPercentage))
+                {
+                    _particles.ForEach(p => p.Update(timeStep));
+                    return;
+                }
+
+                if (_leftHand.Y > ScreenThresholdHeightPercentage)
+                {
+                    if (_rightHand.Y > ScreenThresholdHeightPercentage)
+                    {
+                        UpdateParticlesByLayer(0, _particles.Count / 2, new Vector3D(_leftHand.X, 1 - _leftHand.Y, _leftHand.Z), timeStep);
+                        UpdateParticlesByLayer(_particles.Count / 2, _particles.Count, new Vector3D(_rightHand.X, 1 - _rightHand.Y, _rightHand.Z), timeStep);
+                    }
+                    else
+                        UpdateParticlesByLayer(0, _particles.Count, new Vector3D(_leftHand.X, 1 - _leftHand.Y, _leftHand.Z), timeStep);
+                }
+                else //_rightHand.Y > ScreenThresholdHeightPercentage
+                    UpdateParticlesByLayer(0, _particles.Count, new Vector3D(_rightHand.X, 1 - _rightHand.Y, _rightHand.Z), timeStep);
+            }
         }
 
         private void CheckExplodingInCompleted()
@@ -103,72 +129,82 @@ namespace TechfairKinect.Components.Particles
             }
         }
 
-        private void UpdateRecentlyRemovedParticlePositions()
-        {
-            _particleContainer.IterateRemovedParticles(
-                particleIndex =>
-                {
-                    _particles[particleIndex].ProjectedCenter = _particles[particleIndex].DeactivatedCenter;
-                });
-        }
-
-        private void UpdateActivatedParticlePositions(double timeStep)
-        {
-            //cache the lookup for speed since we'll be iterating in chunks
-            var currentAjp = _adjacentJointPairsByJointTypes.First().Value;
-            lock (_adjacentJointPairsByJointTypes)
-            {
-                _particleContainer.IterateIncludedParticles(
-                    (particleIndex, ajpJoints) =>
-                    {
-                        if (ajpJoints != currentAjp.JointTypes)
-                            currentAjp = _adjacentJointPairsByJointTypes[ajpJoints];
-
-                        _particles[particleIndex].ProjectedCenter =
-                            currentAjp.CalculateScaledProjectedParticleCenter(_particles[particleIndex]);
-                    });
-            }
-        }
-
         public override void ResetSkeleton()
         {
-            _particleContainer.Clear();
+            ResetParticles();
         }
 
         public override void UpdateSkeleton(Dictionary<JointType, ScaledJoint> scaledSkeleton)
         {
-            lock (_adjacentJointPairsByJointTypes)
+            _leftHand = scaledSkeleton[JointType.HandLeft].LocationScreenPercent;
+            _rightHand = scaledSkeleton[JointType.HandRight].LocationScreenPercent;
+
+            if (_leftHand.Y < ScreenThresholdHeightPercentage && _rightHand.Y < ScreenThresholdHeightPercentage)
+                ResetParticles();
+        }
+
+        private Vector3D ScaleCenter(Vector3D center)
+        {
+            return new Vector3D(
+                center.X, 
+                center.Y / (1 - ScreenThresholdHeightPercentage), 
+                center.Z);
+        }
+
+        private void UpdateParticlesByLayer(int startIndex, int endIndex, Vector3D center, double timeStep)
+        {
+            center = ScaleCenter(center);
+
+            int mid = (startIndex + endIndex) / 2;
+            UpdateParticle(_particles[mid], center, timeStep);
+
+            int left = mid - 1, right = mid + 1;
+
+            double currentRadius = InitialLayerRadius;
+
+            while (left >= startIndex || right < endIndex)
             {
-                _adjacentJointPairsByJointTypes.Values.ToList()
-                    .ForEach(ajp => UpdateAdjacentJointPair(ajp, scaledSkeleton));
+                currentRadius *= RadiusMultiplier;
+
+                int particles = (int)(Math.PI / (4 * Math.Asin(InitialLayerRadius / currentRadius)));
+
+                int newLeft = left - Math.Min(left - startIndex, particles);
+                int newRight = right + Math.Min(endIndex - right - 1, particles);
+
+                ActivateLayer(center, currentRadius, newLeft, left, right, newRight, timeStep);
+
+                left = newLeft - 1; right = newRight + 1;
             }
         }
 
-        public void UpdateAdjacentJointPair(AdjacentJointPair ajp, Dictionary<JointType, ScaledJoint> scaledSkeleton)
+        private void ActivateLayer(Vector3D center, double layerRadius, int leftStart, int leftEnd, int rightStart, int rightEnd, double timeStep)
         {
-            var oldInterval = ajp.XInterval;
-            ajp.Update(scaledSkeleton);
+            double anglePerCircle = Math.PI / (leftEnd - leftStart + 1);
 
-            if (oldInterval == null && ajp.XInterval == null)
-                return;
+            for (int i = leftStart; i <= leftEnd; i++)
+                UpdateParticle(_particles[i], CalculatePosition(center, layerRadius, anglePerCircle * (i - leftStart)), timeStep);
 
-            if (oldInterval != null && ajp.XInterval == null)
-            {
-                _particleContainer.RemoveInterval(ajp.JointTypes);
-                return;
-            }
+            anglePerCircle = Math.PI / (rightEnd - rightStart + 1);
 
-            if (oldInterval == null && ajp.XInterval != null)
-            {
-                _particleContainer.AddInterval(ajp.JointTypes, ajp.XInterval.Item1, ajp.XInterval.Item2);
-                return;
-            }
+            for (int i = rightStart; i <= rightEnd; i++)
+                UpdateParticle(_particles[i], CalculatePosition(center, layerRadius, Math.PI + anglePerCircle * (i - rightStart)), timeStep);
+        }
 
-            if (Math.Abs(oldInterval.Item1 - ajp.XInterval.Item1) < double.Epsilon &&
-                Math.Abs(oldInterval.Item2 - ajp.XInterval.Item2) < double.Epsilon)
-                return;
-            
-            _particleContainer.UpdateInterval(ajp.JointTypes, ajp.XInterval.Item1, ajp.XInterval.Item2);
+        private void UpdateParticle(Particle particle, Vector3D center, double timeStep)
+        {
+            particle.ProjectedCenter = center;
+            particle.Update(timeStep);
+        }
+
+        private Vector3D CalculatePosition(Vector3D center, double radius, double angle)
+        {
+            return center + radius * new Vector3D(Math.Cos(angle) * AppSize.Height / AppSize.Width, Math.Sin(angle), 0);
+        }
+
+        private void ResetParticles()
+        {
+            for (int i = 0; i < _particles.Count; i++)
+                _particles[i].ProjectedCenter = _particles[i].DeactivatedCenter;
         }
 
         public override void ExplodeOut(Action onCompleted)
@@ -190,7 +226,7 @@ namespace TechfairKinect.Components.Particles
 
                 var center = new Vector3D(0.5, 0.5, 0.0);
 
-                var unitVector = particle.Position.X == 0.5 && particle.Position.Y == 0.5 ? //TODO: change for 3d
+                var unitVector = particle.Position.X == center.X && particle.Position.Y == center.Y ? //TODO: change for 3d
                     new Vector3D(0, 1.0, 0) : (particle.Position - center).UnitVector();
 
                 particle.Velocity = unitVector * ExplodeVelocity;

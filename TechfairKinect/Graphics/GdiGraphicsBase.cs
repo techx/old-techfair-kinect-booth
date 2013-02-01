@@ -24,6 +24,12 @@ namespace TechfairKinect.Graphics
             get { return _form.Size; }
         }
 
+        public override Color BackgroundColor
+        {
+            get { return _form.BackColor; }
+            set { _form.BackColor = value; }
+        }
+
         public GdiGraphicsBase()
         {
             _renderers = new Dictionary<object, Action<PaintEventArgs>>();

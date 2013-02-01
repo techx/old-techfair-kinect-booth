@@ -25,6 +25,11 @@ namespace TechfairKinect
             Z = vector.Z;
         }
 
+        public static Vector3D FromMagnitudeAngle(double magnitude, double angle)
+        {
+            return magnitude * new Vector3D(Math.Cos(angle), Math.Sin(angle), 0.0);
+        }
+
         public static Vector3D ComponentMult(Vector3D lhs, Vector3D rhs)
         {
             return new Vector3D(

@@ -65,24 +65,16 @@ namespace TechfairKinect.Gestures.Kinect
             using (var frame = e.OpenSkeletonFrame())
             {
                 if (frame.SkeletonArrayLength == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine("No skeletons");
                     return;
-                }
 
                 var skeletons = new Skeleton[frame.SkeletonArrayLength];
                 frame.CopySkeletonDataTo(skeletons);
 
                 if (skeletons.All(s => s.TrackingState == SkeletonTrackingState.NotTracked))
-                {
-                    System.Diagnostics.Debug.WriteLine("No skeletons");
                     return;
-                }
 
                 var skeleton = FindSkeleton(skeletons);
                 var scaled = ScaleSkeleton(skeleton);
-
-                System.Diagnostics.Debug.WriteLine("Skeleton: {0}", skeleton.TrackingId);
 
                 OnSkeletonFrameRead(skeleton.TrackingId, scaled, frame.Timestamp);
             }

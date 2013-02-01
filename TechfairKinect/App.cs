@@ -28,7 +28,7 @@ namespace TechfairKinect
         private IAppState _currentAppState;
         private IComponentRenderer _currentAppStateRenderer;
 
-        private readonly IGestureRecognizer _gestureRecognizer;
+        private readonly ISkeletonUpdater _gestureRecognizer;
 
         public App()
         {
@@ -42,7 +42,7 @@ namespace TechfairKinect
             _appStates = new AppStateFactory().CreateAppStates(_graphicsBase.ScreenBounds);
 
             _appStateRenderers = new AppStateRendererFactory().Create().ToDictionary(componentRenderer => componentRenderer.ComponentType);
-            _gestureRecognizer = new GestureRecognizerFactory().Create();
+            _gestureRecognizer = new SkeletonUpdaterFactory().Create();
         }
 
         private void SizeChangedHandler(object sender, SizeChangedEventArgs e)
@@ -124,7 +124,7 @@ namespace TechfairKinect
 
                 var cur = (int)(_timer.ElapsedMilliseconds - currentTime);
                 if (cur < MillisecondsPerFrame)
-                    Thread.Sleep((int)MillisecondsPerFrame - (int)(_timer.ElapsedMilliseconds - currentTime));
+                    Thread.Sleep((int)MillisecondsPerFrame - cur);
             }
         }
 
